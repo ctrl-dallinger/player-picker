@@ -127,8 +127,10 @@
     overflow-y:auto;
     display:flex; flex-direction:column;
     align-items:center;
-    background: #0e0e16;
-    border:1px solid rgba(255,255,255,0.1);
+    background: rgba(14,14,22,0.70);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border:1px solid rgba(255,255,255,0.13);
     border-radius:24px;
     padding:28px 24px 24px;
     box-shadow: 0 8px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04);
@@ -152,14 +154,14 @@
 
   /* ORDER chips */
   #result-order { display:flex; align-items:center; gap:0; margin-top:4px; flex-wrap:wrap; justify-content:center; max-width:320px; }
-  .order-chip { display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; font-family:'Bebas Neue',sans-serif; font-size:15px; border:2px solid currentColor; background:#0e0e16; opacity:0; animation:chip-in 0.3s ease forwards; }
+  .order-chip { display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; font-family:'Bebas Neue',sans-serif; font-size:15px; border:2px solid currentColor; background:transparent; opacity:0; animation:chip-in 0.3s ease forwards; }
   .order-arrow { color:var(--muted); font-size:13px; padding:0 3px; opacity:0; animation:chip-in 0.3s ease forwards; }
 
   /* TEAMS result */
   #teams-result { display:flex; flex-direction:column; gap:10px; margin-top:8px; width:100%; max-width:380px; }
   .team-row {
     display:flex; align-items:center; gap:10px;
-    background:#16161f; border-radius:14px; padding:10px 14px;
+    background:rgba(22,22,31,0.80); border-radius:14px; padding:10px 14px;
     border:1px solid rgba(255,255,255,0.09);
     opacity:0; transform:translateY(12px); animation:row-in 0.35s ease forwards;
   }
@@ -227,9 +229,16 @@
 
 <script>
 const COLORS = [
-  {hex:'#f5c842'},{hex:'#e83a3a'},{hex:'#3ae8c8'},{hex:'#9b5de5'},
-  {hex:'#f97316'},{hex:'#3a8fe8'},{hex:'#e83ab0'},{hex:'#7de83a'},
-  {hex:'#e8e03a'},{hex:'#e8883a'},
+  {hex:'#f5c842', name:'Gold'},
+  {hex:'#e83a3a', name:'Red'},
+  {hex:'#3ae8c8', name:'Teal'},
+  {hex:'#9b5de5', name:'Purple'},
+  {hex:'#f97316', name:'Orange'},
+  {hex:'#3a8fe8', name:'Blue'},
+  {hex:'#e83ab0', name:'Pink'},
+  {hex:'#7de83a', name:'Green'},
+  {hex:'#e8e03a', name:'Yellow'},
+  {hex:'#e8883a', name:'Amber'},
 ];
 const TEAM_COLORS = [
   {bg:'#e83a3a', label:'Team Red',    text:'#fff'},
@@ -340,7 +349,7 @@ function revealFirst(ids) {
   setTimeout(() => {
     document.getElementById('result-label').textContent = 'GOES FIRST';
     const t = document.getElementById('result-title');
-    t.textContent = c.hex;
+    t.textContent = c.name;
     t.style.cssText = `background:linear-gradient(135deg,${c.hex},${c.hex}99);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text`;
     document.getElementById('result-order').innerHTML = '';
     document.getElementById('teams-result').innerHTML = '';
@@ -414,11 +423,18 @@ function revealTeams(ids) {
       const dotsDiv = document.createElement('div');
       dotsDiv.className='team-dots';
       memberIds.forEach((id,di) => {
+        const orig = COLORS[touches[id]?.colorIdx??0];
+        const pipWrap = document.createElement('div');
+        pipWrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:3px';
         const pip = document.createElement('div');
         pip.className='dot-pip';
-        const orig = COLORS[touches[id]?.colorIdx??0].hex;
-        pip.style.cssText=`background:${orig}30;border-color:${orig};animation-delay:${0.1+ti*0.1+di*0.06}s`;
-        dotsDiv.appendChild(pip);
+        pip.style.cssText=`background:${orig.hex}30;border-color:${orig.hex};animation-delay:${0.1+ti*0.1+di*0.06}s`;
+        const pipLabel = document.createElement('div');
+        pipLabel.style.cssText=`font-size:9px;letter-spacing:0.06em;color:${orig.hex};font-family:'DM Sans',sans-serif;opacity:0;animation:chip-in 0.25s ease ${0.15+ti*0.1+di*0.06}s forwards`;
+        pipLabel.textContent = orig.name;
+        pipWrap.appendChild(pip);
+        pipWrap.appendChild(pipLabel);
+        dotsDiv.appendChild(pipWrap);
       });
 
       row.appendChild(badge); row.appendChild(dotsDiv); tr.appendChild(row);
