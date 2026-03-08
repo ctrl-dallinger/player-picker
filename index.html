@@ -3,185 +3,348 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Who Goes First?</title>
+<title>WHOO? / WHUT?</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  :root {
-    --bg: #0a0a0f; --surface: #13131a;
-    --gold: #f5c842; --gold2: #e8a820;
-    --text: #f0eee8; --muted: #666580;
-  }
-  body {
-    background: var(--bg); color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    height: 100dvh; overflow: hidden;
-    user-select: none; touch-action: none;
-  }
-  body::before {
-    content: ''; position: fixed; inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    background-size: 200px; pointer-events: none; z-index: 100;
-  }
-  .grid-bg {
-    position: fixed; inset: 0;
-    background-image: linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px), linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);
-    background-size: 60px 60px; pointer-events: none; z-index: 0;
-  }
-  #arena { position: fixed; inset: 0; transition: background 0.3s; }
-  #arena.active { background: radial-gradient(ellipse at 50% 60%, rgba(245,200,66,0.05) 0%, transparent 70%); }
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root {
+  --bg:#0a0a0f; --surface:#13131a;
+  --gold:#f5c842; --gold2:#e8a820;
+  --text:#f0eee8; --muted:#666580;
+}
+body {
+  background:var(--bg); color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  height:100dvh; overflow:hidden;
+  user-select:none; touch-action:none;
+}
+body::before {
+  content:''; position:fixed; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size:200px; pointer-events:none; z-index:100;
+}
+.grid-bg {
+  position:fixed; inset:0;
+  background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);
+  background-size:60px 60px; pointer-events:none; z-index:0;
+}
+#arena { position:fixed; inset:0; transition:background 0.3s; }
+#arena.active { background:radial-gradient(ellipse at 50% 60%,rgba(245,200,66,0.05) 0%,transparent 70%); }
 
-  /* TOP BAR */
-  #ui-top {
-    position: fixed; top: 0; left: 0; right: 0;
-    padding: 20px 20px 0;
-    display: flex; align-items: flex-start; justify-content: space-between;
-    z-index: 10; pointer-events: none;
-  }
-  #title { font-family:'Bebas Neue',sans-serif; font-size:clamp(24px,5vw,38px); letter-spacing:0.05em; color:var(--gold); line-height:1; text-shadow:0 0 40px rgba(245,200,66,0.3); }
-  #subtitle { font-size:10px; color:var(--muted); letter-spacing:0.12em; text-transform:uppercase; margin-top:3px; }
+/* ── APP SWITCHER ── */
+#app-switcher {
+  position:fixed; top:20px; left:20px;
+  display:flex; align-items:baseline; gap:6px;
+  z-index:20; pointer-events:all;
+}
+.app-word {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(28px,6vw,42px);
+  letter-spacing:0.05em; line-height:1;
+  cursor:pointer; transition:color 0.2s,text-shadow 0.2s;
+}
+.app-word.active  { color:var(--gold); text-shadow:0 0 40px rgba(245,200,66,0.4); }
+.app-word.inactive{ color:var(--muted); text-shadow:none; }
+.app-divider {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(18px,4vw,28px); color:#2a2a38; line-height:1; pointer-events:none;
+}
+#subtitle {
+  position:fixed; top:64px; left:20px;
+  font-size:10px; color:var(--muted);
+  letter-spacing:0.12em; text-transform:uppercase;
+  z-index:20; pointer-events:none; transition:opacity 0.2s;
+}
 
-  #mode-toggle {
-    display:flex; background:var(--surface); border:1px solid rgba(255,255,255,0.07);
-    border-radius:100px; padding:3px; pointer-events:all; gap:2px;
-  }
-  .mode-btn {
-    font-family:'DM Sans',sans-serif; font-size:10px; font-weight:500;
-    letter-spacing:0.06em; text-transform:uppercase; padding:6px 12px;
-    border-radius:100px; border:none; background:transparent; color:var(--muted);
-    cursor:pointer; transition:all 0.2s; white-space:nowrap;
-  }
-  .mode-btn.active { background:var(--gold); color:#0a0a0f; font-weight:700; }
+/* ── WHOO MODE TOGGLE ── */
+#mode-toggle {
+  position:fixed; top:20px; right:20px;
+  display:flex; background:var(--surface);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:100px; padding:3px;
+  pointer-events:all; gap:2px; z-index:20; transition:opacity 0.2s;
+}
+.mode-btn {
+  font-family:'DM Sans',sans-serif; font-size:10px; font-weight:500;
+  letter-spacing:0.06em; text-transform:uppercase; padding:6px 12px;
+  border-radius:100px; border:none; background:transparent; color:var(--muted);
+  cursor:pointer; transition:all 0.2s; white-space:nowrap;
+}
+.mode-btn.active { background:var(--gold); color:#0a0a0f; font-weight:700; }
 
-  /* TEAMS COUNT BAR */
-  #teams-bar {
-    position:fixed; top:72px; left:50%; transform:translateX(-50%);
-    display:flex; align-items:center; gap:8px;
-    z-index:10; pointer-events:all; opacity:0; transition:opacity 0.25s;
-  }
-  #teams-bar.show { opacity:1; }
-  .tb-label { font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
-  .team-count-btn {
-    width:32px; height:32px; border-radius:50%;
-    border:1.5px solid rgba(255,255,255,0.12); background:var(--surface);
-    color:var(--muted); font-family:'Bebas Neue',sans-serif; font-size:16px;
-    cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center;
-  }
-  .team-count-btn.active { border-color:var(--gold); color:var(--gold); background:rgba(245,200,66,0.1); box-shadow:0 0 12px rgba(245,200,66,0.2); }
+/* ── TEAMS BAR ── */
+#teams-bar {
+  position:fixed; top:72px; left:50%; transform:translateX(-50%);
+  display:flex; align-items:center; gap:8px;
+  z-index:10; pointer-events:all; opacity:0; transition:opacity 0.25s;
+}
+#teams-bar.show { opacity:1; }
+.tb-label { font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
+.team-count-btn {
+  width:32px; height:32px; border-radius:50%;
+  border:1.5px solid rgba(255,255,255,0.12); background:var(--surface);
+  color:var(--muted); font-family:'Bebas Neue',sans-serif; font-size:16px;
+  cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center;
+}
+.team-count-btn.active { border-color:var(--gold); color:var(--gold); background:rgba(245,200,66,0.1); box-shadow:0 0 12px rgba(245,200,66,0.2); }
 
-  /* FINGER COUNT */
-  #finger-count {
-    position:fixed; bottom:130px; left:50%; transform:translateX(-50%);
-    display:flex; align-items:center; gap:8px;
-    opacity:0; transition:opacity 0.3s; pointer-events:none; z-index:10;
-  }
-  #finger-count.show { opacity:1; }
-  .count-num { font-family:'Bebas Neue',sans-serif; font-size:52px; color:var(--gold); line-height:1; text-shadow:0 0 30px rgba(245,200,66,0.4); }
-  .count-label { font-size:11px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; line-height:1.4; }
+/* ── FINGER COUNT ── */
+#finger-count {
+  position:fixed; bottom:130px; left:50%; transform:translateX(-50%);
+  display:flex; align-items:center; gap:8px;
+  opacity:0; transition:opacity 0.3s; pointer-events:none; z-index:10;
+}
+#finger-count.show { opacity:1; }
+.count-num { font-family:'Bebas Neue',sans-serif; font-size:52px; color:var(--gold); line-height:1; text-shadow:0 0 30px rgba(245,200,66,0.4); }
+.count-label { font-size:11px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; line-height:1.4; }
 
-  /* INSTRUCTION */
-  #instruction { position:fixed; bottom:48px; left:50%; transform:translateX(-50%); text-align:center; pointer-events:none; z-index:10; white-space:nowrap; }
-  #inst-big { font-family:'Bebas Neue',sans-serif; font-size:clamp(16px,4vw,24px); letter-spacing:0.08em; color:var(--muted); line-height:1; }
-  #inst-small { font-size:10px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; margin-top:6px; opacity:0.6; }
+/* ── WHOO INSTRUCTION ── */
+#instruction {
+  position:fixed; bottom:48px; left:50%; transform:translateX(-50%);
+  text-align:center; pointer-events:none; z-index:10; white-space:nowrap; transition:opacity 0.3s;
+}
+#inst-big { font-family:'Bebas Neue',sans-serif; font-size:clamp(16px,4vw,24px); letter-spacing:0.08em; color:var(--muted); line-height:1; }
+#inst-small { font-size:10px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; margin-top:6px; opacity:0.6; }
 
-  /* HOLD BAR */
-  #hold-bar {
-    position:fixed; bottom:0; left:0; height:3px;
-    background:linear-gradient(90deg,var(--gold),var(--gold2));
-    width:0%; transition:width 0.05s linear; z-index:20;
-    box-shadow:0 0 12px rgba(245,200,66,0.5);
-  }
+/* ── HOLD BAR ── */
+#hold-bar {
+  position:fixed; bottom:0; left:0; height:3px;
+  background:linear-gradient(90deg,var(--gold),var(--gold2));
+  width:0%; transition:width 0.05s linear; z-index:20;
+  box-shadow:0 0 12px rgba(245,200,66,0.5);
+}
 
-  /* TOUCH DOTS */
-  .touch-dot {
-    position:fixed; width:80px; height:80px; border-radius:50%;
-    transform:translate(-50%,-50%) scale(0);
-    pointer-events:none; transition:transform 0.15s cubic-bezier(0.34,1.56,0.64,1);
-    display:flex; align-items:center; justify-content:center; z-index:5;
-  }
-  .touch-dot.alive { transform:translate(-50%,-50%) scale(1); }
-  .touch-dot .ring { position:absolute; inset:0; border-radius:50%; border:2.5px solid currentColor; opacity:0.5; transition:border-color 0.4s, border-width 0.3s, opacity 0.3s; }
-  .touch-dot .inner { width:44px; height:44px; border-radius:50%; background:currentColor; opacity:0.85; }
-  .touch-dot .pulse { position:absolute; inset:-12px; border-radius:50%; border:2px solid currentColor; opacity:0; animation:pulse-ring 1.8s ease-out infinite; }
-  @keyframes pulse-ring { 0%{transform:scale(0.8);opacity:0.4} 100%{transform:scale(1.4);opacity:0} }
+/* ── TOUCH DOTS ── */
+.touch-dot {
+  position:fixed; width:80px; height:80px; border-radius:50%;
+  transform:translate(-50%,-50%) scale(0);
+  pointer-events:none; transition:transform 0.15s cubic-bezier(0.34,1.56,0.64,1);
+  display:flex; align-items:center; justify-content:center; z-index:5;
+}
+.touch-dot.alive { transform:translate(-50%,-50%) scale(1); }
+.touch-dot .ring { position:absolute; inset:0; border-radius:50%; border:2.5px solid currentColor; opacity:0.5; transition:border-color 0.4s,border-width 0.3s,opacity 0.3s; }
+.touch-dot .inner { width:44px; height:44px; border-radius:50%; background:currentColor; opacity:0.85; }
+.touch-dot .pulse { position:absolute; inset:-12px; border-radius:50%; border:2px solid currentColor; opacity:0; animation:pulse-ring 1.8s ease-out infinite; }
+@keyframes pulse-ring { 0%{transform:scale(0.8);opacity:0.4} 100%{transform:scale(1.4);opacity:0} }
+.touch-dot .rank-label {
+  position:absolute; top:-26px; left:50%; transform:translateX(-50%);
+  font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:0.1em;
+  color:currentColor; white-space:nowrap; opacity:0; transition:opacity 0.3s;
+}
+.touch-dot.labeled .rank-label { opacity:1; }
+.touch-dot.teamed .ring { border-width:4px; opacity:1; }
+.touch-dot.winner { z-index:20; animation:winner-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+.touch-dot.loser { transform:translate(-50%,-50%) scale(0) !important; opacity:0; transition:all 0.3s ease-in !important; }
+.touch-dot.dim { opacity:0.4; transition:opacity 0.4s; }
+@keyframes winner-pop { 0%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-50%) scale(1.3)} 100%{transform:translate(-50%,-50%) scale(1.1)} }
 
-  .touch-dot .rank-label {
-    position:absolute; top:-26px; left:50%; transform:translateX(-50%);
-    font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:0.1em;
-    color:currentColor; white-space:nowrap; opacity:0; transition:opacity 0.3s;
-  }
-  .touch-dot.labeled .rank-label { opacity:1; }
-  .touch-dot.teamed .ring { border-width:4px; opacity:1; }
+/* ── WHOO RESULT CARD ── */
+#result-overlay {
+  position:fixed; top:50%; left:50%;
+  transform:translate(-50%,-50%) scale(0.92);
+  width:min(420px,80vw); max-height:70dvh; overflow-y:auto;
+  display:flex; flex-direction:column; align-items:center;
+  background:rgba(14,14,22,0.40);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.13); border-radius:20px;
+  padding:18px 18px 16px;
+  box-shadow:0 8px 60px rgba(0,0,0,0.8),0 0 0 1px rgba(255,255,255,0.04);
+  opacity:0; pointer-events:none; z-index:15;
+  transition:opacity 0.4s,transform 0.4s cubic-bezier(0.34,1.3,0.64,1);
+  text-align:center;
+}
+#result-overlay.show { opacity:1; pointer-events:all; transform:translate(-50%,-50%) scale(1); }
+#result-label { font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+#result-title {
+  font-family:'Bebas Neue',sans-serif; font-size:clamp(44px,14vw,84px);
+  letter-spacing:0.04em; line-height:0.9;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:6px; animation:result-in 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
+}
+@keyframes result-in { from{opacity:0;transform:scale(0.7)} to{opacity:1;transform:scale(1)} }
+#result-order { display:flex; align-items:center; gap:0; margin-top:2px; flex-wrap:wrap; justify-content:center; max-width:320px; }
+.order-chip { display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; font-family:'Bebas Neue',sans-serif; font-size:15px; border:2px solid currentColor; background:transparent; opacity:0; animation:chip-in 0.3s ease forwards; }
+.order-arrow { color:var(--muted); font-size:13px; padding:0 3px; opacity:0; animation:chip-in 0.3s ease forwards; }
+#teams-result { display:flex; flex-direction:column; gap:6px; margin-top:6px; width:100%; max-width:380px; }
+.team-row {
+  display:flex; align-items:center; gap:8px;
+  background:rgba(22,22,31,0.80); border-radius:12px; padding:7px 10px;
+  border:1px solid rgba(255,255,255,0.09);
+  opacity:0; transform:translateY(12px); animation:row-in 0.35s ease forwards;
+}
+@keyframes row-in { to{opacity:1;transform:translateY(0)} }
+.team-badge { font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:0.08em; padding:4px 10px; border-radius:100px; white-space:nowrap; flex-shrink:0; }
+.team-dots { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.dot-pip { width:22px; height:22px; border-radius:50%; border:2px solid; opacity:0; animation:chip-in 0.25s ease forwards; }
+@keyframes chip-in { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+#reset-btn {
+  margin-top:14px; padding:10px 28px; background:#1a1a26;
+  border:1.5px solid rgba(255,255,255,0.18); border-radius:100px;
+  color:var(--text); font-family:'DM Sans',sans-serif; font-size:11px;
+  letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; transition:all 0.2s; flex-shrink:0;
+}
+#reset-btn:hover,#reset-btn:active { border-color:var(--gold); color:var(--gold); background:#1f1f2e; }
 
-  .touch-dot.winner { z-index:20; animation:winner-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
-  .touch-dot.loser { transform:translate(-50%,-50%) scale(0) !important; opacity:0; transition:all 0.3s ease-in !important; }
-  @keyframes winner-pop { 0%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-50%) scale(1.3)} 100%{transform:translate(-50%,-50%) scale(1.1)} }
+/* ══════════════════════════════════
+   WHUT? DICE SELECTOR — top right, two columns
+══════════════════════════════════ */
 
-  /* RESULT OVERLAY — centered card, NOT full screen so finger dots stay visible */
-  #result-overlay {
-    position:fixed;
-    top:50%; left:50%;
-    transform:translate(-50%,-50%) scale(0.92);
-    width: min(420px, 80vw);
-    max-height: 70dvh;
-    overflow-y:auto;
-    display:flex; flex-direction:column;
-    align-items:center;
-    background: rgba(14,14,22,0.70);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border:1px solid rgba(255,255,255,0.13);
-    border-radius:24px;
-    padding:28px 24px 24px;
-    box-shadow: 0 8px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04);
-    opacity:0; pointer-events:none; z-index:15;
-    transition:opacity 0.4s, transform 0.4s cubic-bezier(0.34,1.3,0.64,1);
-    text-align:center;
-  }
-  #result-overlay.show {
-    opacity:1; pointer-events:all;
-    transform:translate(-50%,-50%) scale(1);
-  }
-  #result-label { font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
-  #result-title {
-    font-family:'Bebas Neue',sans-serif; font-size:clamp(44px,14vw,84px);
-    letter-spacing:0.04em; line-height:0.9;
-    background:linear-gradient(135deg,var(--gold),var(--gold2));
-    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-    margin-bottom:6px; animation:result-in 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;
-  }
-  @keyframes result-in { from{opacity:0;transform:scale(0.7)} to{opacity:1;transform:scale(1)} }
+/* Outer wrapper — same position as #mode-toggle */
+#dice-selector {
+  position:fixed; top:20px; right:20px;
+  display:flex; flex-direction:row; align-items:flex-start; gap:5px;
+  z-index:20; opacity:0; pointer-events:none; transition:opacity 0.25s;
+}
+#dice-selector.show { opacity:1; pointer-events:all; }
 
-  /* ORDER chips */
-  #result-order { display:flex; align-items:center; gap:0; margin-top:4px; flex-wrap:wrap; justify-content:center; max-width:320px; }
-  .order-chip { display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; font-family:'Bebas Neue',sans-serif; font-size:15px; border:2px solid currentColor; background:transparent; opacity:0; animation:chip-in 0.3s ease forwards; }
-  .order-arrow { color:var(--muted); font-size:13px; padding:0 3px; opacity:0; animation:chip-in 0.3s ease forwards; }
+/* Number column (left) */
+#dice-count-col {
+  display:flex; flex-direction:column; gap:3px; align-items:center;
+}
+.count-pip {
+  width:26px; height:26px; border-radius:50%;
+  border:1.5px solid rgba(255,255,255,0.1); background:var(--surface);
+  color:var(--muted); font-family:'Bebas Neue',sans-serif; font-size:12px;
+  cursor:pointer; transition:all 0.18s;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.count-pip.active { border-color:var(--gold); color:var(--gold); background:rgba(245,200,66,0.12); }
+.count-col-label {
+  font-size:7px; letter-spacing:0.08em; text-transform:uppercase;
+  color:var(--muted); margin-bottom:1px; text-align:center;
+}
 
-  /* TEAMS result */
-  #teams-result { display:flex; flex-direction:column; gap:10px; margin-top:8px; width:100%; max-width:380px; }
-  .team-row {
-    display:flex; align-items:center; gap:10px;
-    background:rgba(22,22,31,0.80); border-radius:14px; padding:10px 14px;
-    border:1px solid rgba(255,255,255,0.09);
-    opacity:0; transform:translateY(12px); animation:row-in 0.35s ease forwards;
-  }
-  @keyframes row-in { to{opacity:1;transform:translateY(0)} }
-  .team-badge { font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:0.08em; padding:4px 10px; border-radius:100px; white-space:nowrap; flex-shrink:0; }
-  .team-dots { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
-  .dot-pip { width:22px; height:22px; border-radius:50%; border:2px solid; opacity:0; animation:chip-in 0.25s ease forwards; }
+/* Die type column (right) */
+#dice-type-col {
+  display:flex; flex-direction:column; gap:3px; align-items:center;
+}
+.die-type-btn {
+  width:44px; height:26px; border-radius:7px;
+  border:1.5px solid rgba(255,255,255,0.1); background:var(--surface);
+  color:var(--muted); font-family:'Bebas Neue',sans-serif; font-size:11px;
+  letter-spacing:0.04em; cursor:pointer; transition:all 0.2s;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+/* active = toggled on but not focused */
+.die-type-btn.active {
+  border-color:rgba(245,200,66,0.5); color:rgba(245,200,66,0.7);
+  background:rgba(245,200,66,0.06);
+}
+/* focused = currently controlling the count column */
+.die-type-btn.focused {
+  border-color:var(--gold); color:var(--gold);
+  background:rgba(245,200,66,0.15);
+  box-shadow:0 0 10px rgba(245,200,66,0.25);
+}
+.die-col-label {
+  font-size:7px; letter-spacing:0.08em; text-transform:uppercase;
+  color:var(--muted); margin-bottom:1px; text-align:center;
+}
 
-  @keyframes chip-in { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+/* ── DICE SCREEN (center area) ── */
+#dice-screen {
+  position:fixed; inset:0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  z-index:8; opacity:0; pointer-events:none; transition:opacity 0.3s;
+}
+#dice-screen.show { opacity:1; pointer-events:all; }
 
-  #reset-btn {
-    margin-top:24px; padding:13px 32px; background:#1a1a26;
-    border:1.5px solid rgba(255,255,255,0.18); border-radius:100px;
-    color:var(--text); font-family:'DM Sans',sans-serif; font-size:11px;
-    letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; transition:all 0.2s; flex-shrink:0;
-  }
-  #reset-btn:hover, #reset-btn:active { border-color:var(--gold); color:var(--gold); background:#1f1f2e; }
+/* No dice selected hint */
+#dice-hint {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(16px,4vw,22px);
+  letter-spacing:0.1em; color:var(--muted);
+  text-align:center; opacity:1; transition:opacity 0.3s;
+}
+#dice-hint.hide { opacity:0; pointer-events:none; }
 
-  /* Dim dots slightly when result is showing — still visible, just less bright */
-  .touch-dot.dim { opacity:0.4; transition:opacity 0.4s; }
+/* Results area */
+#dice-results-area {
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  width:min(340px,75vw); margin-bottom:32px;
+}
+
+/* Per-type group */
+.dice-group {
+  width:100%;
+  background:rgba(14,14,22,0.50);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:14px; padding:10px 12px;
+  display:flex; flex-direction:column; gap:6px;
+  opacity:0; transform:translateY(8px);
+  animation:row-in 0.3s ease forwards;
+}
+.dice-group-header {
+  display:flex; justify-content:space-between; align-items:center;
+}
+.dice-group-label {
+  font-family:'Bebas Neue',sans-serif; font-size:12px;
+  letter-spacing:0.1em; color:var(--muted);
+}
+.dice-group-subtotal {
+  font-family:'Bebas Neue',sans-serif; font-size:16px;
+  color:var(--gold); letter-spacing:0.06em;
+  opacity:0; transition:opacity 0.3s;
+}
+.dice-group-subtotal.show { opacity:1; }
+.dice-chips-row {
+  display:flex; flex-wrap:wrap; gap:6px;
+}
+.dice-chip {
+  display:flex; align-items:center; justify-content:center;
+  min-width:40px; height:40px; padding:0 8px;
+  border-radius:10px; border:1.5px solid var(--gold);
+  background:rgba(245,200,66,0.08);
+  font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--gold);
+  letter-spacing:0.04em;
+  opacity:0; transform:scale(0.8);
+  transition:opacity 0.2s,transform 0.2s;
+}
+.dice-chip.show { opacity:1; transform:scale(1); }
+.dice-chip.rolling-chip { animation:num-flicker 0.08s ease infinite; }
+@keyframes num-flicker { 0%{opacity:1} 49%{opacity:1} 50%{opacity:0.3} 100%{opacity:1} }
+
+/* Grand total */
+#dice-grand-wrap {
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  opacity:0; transition:opacity 0.4s; margin-top:2px;
+}
+#dice-grand-wrap.show { opacity:1; }
+#dice-grand-label { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); }
+#dice-grand-total {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(60px,16vw,96px); line-height:1;
+  color:var(--gold); text-shadow:0 0 40px rgba(245,200,66,0.3);
+  letter-spacing:0.04em;
+}
+
+/* Progress bar */
+#dice-bar-wrap {
+  width:min(200px,55vw); height:3px;
+  background:rgba(255,255,255,0.07); border-radius:100px; overflow:hidden;
+  margin-bottom:36px; opacity:0; transition:opacity 0.2s;
+}
+#dice-bar-wrap.show { opacity:1; }
+#dice-bar {
+  height:100%; width:0%;
+  background:linear-gradient(90deg,var(--gold),var(--gold2));
+  border-radius:100px; box-shadow:0 0 8px rgba(245,200,66,0.5);
+}
+
+/* Roll button */
+#roll-btn {
+  padding:16px 48px;
+  background:rgba(245,200,66,0.1); border:1.5px solid var(--gold);
+  border-radius:100px; color:var(--gold);
+  font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:0.12em;
+  cursor:pointer; transition:all 0.2s;
+  box-shadow:0 0 24px rgba(245,200,66,0.1);
+}
+#roll-btn:hover,#roll-btn:active { background:rgba(245,200,66,0.2); box-shadow:0 0 40px rgba(245,200,66,0.25); transform:scale(1.03); }
+#roll-btn:disabled { opacity:0.4; cursor:default; transform:none; }
 </style>
 </head>
 <body>
@@ -189,18 +352,22 @@
 <div id="arena"></div>
 <div id="hold-bar"></div>
 
-<div id="ui-top">
-  <div>
-    <div id="title">Who Goes First?</div>
-    <div id="subtitle">Board Game Picker</div>
-  </div>
-  <div id="mode-toggle">
-    <button class="mode-btn active" data-mode="first" onclick="setMode('first')">First</button>
-    <button class="mode-btn" data-mode="order" onclick="setMode('order')">Order</button>
-    <button class="mode-btn" data-mode="teams" onclick="setMode('teams')">Teams</button>
-  </div>
+<!-- APP SWITCHER -->
+<div id="app-switcher">
+  <span class="app-word active"  id="word-whoo" onclick="switchApp('whoo')">WHOO?</span>
+  <span class="app-divider">/</span>
+  <span class="app-word inactive" id="word-whut" onclick="switchApp('whut')">WHUT?</span>
+</div>
+<div id="subtitle">Game Picker</div>
+
+<!-- WHOO MODE TOGGLE -->
+<div id="mode-toggle">
+  <button class="mode-btn active" data-mode="first" onclick="setMode('first')">First</button>
+  <button class="mode-btn" data-mode="order" onclick="setMode('order')">Order</button>
+  <button class="mode-btn" data-mode="teams" onclick="setMode('teams')">Teams</button>
 </div>
 
+<!-- TEAMS BAR -->
 <div id="teams-bar">
   <span class="tb-label">Teams:</span>
   <button class="team-count-btn active" data-n="2" onclick="setTeamCount(2)">2</button>
@@ -209,16 +376,17 @@
   <button class="team-count-btn" data-n="5" onclick="setTeamCount(5)">5</button>
 </div>
 
+<!-- WHOO FINGER COUNT & INSTRUCTION -->
 <div id="finger-count">
   <div class="count-num" id="count-num">0</div>
   <div class="count-label">fingers<br>touching</div>
 </div>
-
 <div id="instruction">
-  <div id="inst-big" class="big" style="font-family:'Bebas Neue',sans-serif;font-size:clamp(16px,4vw,24px);letter-spacing:0.08em;color:var(--muted);line-height:1">Touch &amp; Hold</div>
+  <div id="inst-big" style="font-family:'Bebas Neue',sans-serif;font-size:clamp(16px,4vw,24px);letter-spacing:0.08em;color:var(--muted);line-height:1">Touch &amp; Hold</div>
   <div id="inst-small" style="font-size:10px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-top:6px;opacity:0.6">Place all players' fingers on screen</div>
 </div>
 
+<!-- WHOO RESULT CARD -->
 <div id="result-overlay">
   <div id="result-label">GOES FIRST</div>
   <div id="result-title"></div>
@@ -227,227 +395,247 @@
   <button id="reset-btn" onclick="reset()">Choose Again</button>
 </div>
 
+<!-- WHUT DICE SCREEN -->
+<div id="dice-screen">
+  <div id="dice-hint">← Select a die type to begin</div>
+  <div id="dice-results-area"></div>
+  <div id="dice-grand-wrap">
+    <div id="dice-grand-label">GRAND TOTAL</div>
+    <div id="dice-grand-total"></div>
+  </div>
+  <div id="dice-bar-wrap"><div id="dice-bar"></div></div>
+  <button id="roll-btn" onclick="rollDice()">ROLL</button>
+</div>
+
+<!-- WHUT DICE SELECTOR — two columns, top right -->
+<div id="dice-selector">
+  <!-- left: number count column -->
+  <div id="dice-count-col">
+    <div class="count-col-label">Qty</div>
+    <!-- pips 1-10 built by JS -->
+  </div>
+  <!-- right: die type column -->
+  <div id="dice-type-col">
+    <div class="die-col-label">Die</div>
+    <!-- buttons built by JS -->
+  </div>
+</div>
+
 <script>
+/* ══════════════════════════
+   SHARED DATA
+══════════════════════════ */
 const COLORS = [
-  {hex:'#f5c842', name:'Gold'},
-  {hex:'#e83a3a', name:'Red'},
-  {hex:'#3ae8c8', name:'Teal'},
-  {hex:'#9b5de5', name:'Purple'},
-  {hex:'#f97316', name:'Orange'},
-  {hex:'#3a8fe8', name:'Blue'},
-  {hex:'#e83ab0', name:'Pink'},
-  {hex:'#7de83a', name:'Green'},
-  {hex:'#e8e03a', name:'Yellow'},
-  {hex:'#e8883a', name:'Amber'},
+  {hex:'#e83a3a',name:'Red'},{hex:'#3a8fe8',name:'Blue'},{hex:'#22c55e',name:'Green'},
+  {hex:'#e83ab0',name:'Pink'},{hex:'#f5c842',name:'Gold'},{hex:'#22ddff',name:'Cyan'},
+  {hex:'#f0f0f0',name:'White'},{hex:'#f97316',name:'Orange'},{hex:'#c47c3a',name:'Brown'},
+  {hex:'#3affd4',name:'Mint'},
 ];
 const TEAM_COLORS = [
-  {bg:'#e83a3a', label:'Team Red',    text:'#fff'},
-  {bg:'#3a8fe8', label:'Team Blue',   text:'#fff'},
-  {bg:'#7de83a', label:'Team Green',  text:'#111'},
-  {bg:'#f97316', label:'Team Orange', text:'#111'},
-  {bg:'#9b5de5', label:'Team Purple', text:'#fff'},
+  {bg:'#e83a3a',label:'Team Red',text:'#fff'},{bg:'#3a8fe8',label:'Team Blue',text:'#fff'},
+  {bg:'#22c55e',label:'Team Green',text:'#111'},{bg:'#f5c842',label:'Team Yellow',text:'#111'},
+  {bg:'#9b5de5',label:'Team Purple',text:'#fff'},
 ];
 
-let mode = 'first', numTeams = 2;
-let touches = {}, holdTimer = null, done = false, holdStart = null;
-const HOLD_TIME = 1800;
-let colorPool = [...Array(COLORS.length).keys()];
-let usedColors = {};
+/* ══════════════════════════
+   APP SWITCHER
+══════════════════════════ */
+let appMode = 'whoo';
+
+function switchApp(app) {
+  if (appMode === app) return;
+  appMode = app;
+  document.getElementById('word-whoo').className = 'app-word '+(app==='whoo'?'active':'inactive');
+  document.getElementById('word-whut').className = 'app-word '+(app==='whut'?'active':'inactive');
+  const isWhoo = app === 'whoo';
+  document.getElementById('subtitle').textContent = isWhoo ? 'Game Picker' : 'Dice Roller';
+  document.getElementById('mode-toggle').style.cssText = isWhoo ? '' : 'opacity:0;pointer-events:none';
+  document.getElementById('instruction').style.opacity = isWhoo ? '1' : '0';
+  document.getElementById('finger-count').classList.remove('show');
+  document.getElementById('teams-bar').classList.remove('show');
+  document.getElementById('dice-screen').classList.toggle('show', !isWhoo);
+  document.getElementById('dice-selector').classList.toggle('show', !isWhoo);
+  reset();
+  resetDice();
+}
+
+/* ══════════════════════════
+   WHOO — PLAYER PICKER
+══════════════════════════ */
+let mode='first', numTeams=2;
+let touches={}, holdTimer=null, done=false, holdStart=null;
+const HOLD_TIME=1800;
+let colorPool=[...Array(COLORS.length).keys()];
+let usedColors={};
 
 function setMode(m) {
-  mode = m;
-  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
-  document.getElementById('teams-bar').classList.toggle('show', m === 'teams');
+  mode=m;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
+  document.getElementById('teams-bar').classList.toggle('show',m==='teams');
   updateInstruction();
 }
-
 function setTeamCount(n) {
-  numTeams = n;
-  document.querySelectorAll('.team-count-btn').forEach(b => b.classList.toggle('active', +b.dataset.n === n));
+  numTeams=n;
+  document.querySelectorAll('.team-count-btn').forEach(b=>b.classList.toggle('active',+b.dataset.n===n));
 }
-
 function updateInstruction() {
-  if (done) return;
-  const n = Object.keys(touches).length;
-  const msgs = {first:'Choosing who goes first', order:'Shuffling play order', teams:`Splitting into ${numTeams} teams`};
-  document.getElementById('inst-big').textContent = n === 0 ? 'Touch & Hold' : 'Keep Holding…';
-  document.getElementById('inst-small').textContent = n === 0 ? "Place all players' fingers on screen" : msgs[mode];
+  if(done||appMode!=='whoo') return;
+  const n=Object.keys(touches).length;
+  const msgs={first:'Choosing who goes first',order:'Shuffling play order',teams:`Splitting into ${numTeams} teams`};
+  document.getElementById('inst-big').textContent=n===0?'Touch & Hold':'Keep Holding…';
+  document.getElementById('inst-small').textContent=n===0?"Place all players' fingers on screen":msgs[mode];
 }
-
 function getNextColor() {
-  if (!colorPool.length) colorPool = [...Array(COLORS.length).keys()];
-  return colorPool.splice(Math.floor(Math.random() * colorPool.length), 1)[0];
+  if(!colorPool.length) colorPool=[...Array(COLORS.length).keys()];
+  return colorPool.splice(Math.floor(Math.random()*colorPool.length),1)[0];
 }
-
-function createDot(id, x, y) {
-  const ci = getNextColor();
-  usedColors[id] = ci;
-  const el = document.createElement('div');
-  el.className = 'touch-dot';
-  el.style.cssText = `left:${x}px;top:${y}px;color:${COLORS[ci].hex}`;
-  el.innerHTML = `<div class="pulse"></div><div class="ring"></div><div class="inner"></div><div class="rank-label"></div>`;
+function createDot(id,x,y) {
+  const ci=getNextColor(); usedColors[id]=ci;
+  const el=document.createElement('div');
+  el.className='touch-dot';
+  el.style.cssText=`left:${x}px;top:${y}px;color:${COLORS[ci].hex}`;
+  el.innerHTML=`<div class="pulse"></div><div class="ring"></div><div class="inner"></div><div class="rank-label"></div>`;
   document.getElementById('arena').appendChild(el);
-  requestAnimationFrame(() => el.classList.add('alive'));
-  return { el, x, y, colorIdx: ci };
+  requestAnimationFrame(()=>el.classList.add('alive'));
+  return {el,x,y,colorIdx:ci};
 }
-
 function removeDot(id) {
-  const t = touches[id]; if (!t) return;
+  const t=touches[id]; if(!t) return;
   t.el.classList.remove('alive');
-  t.el.style.transform = 'translate(-50%,-50%) scale(0)';
-  setTimeout(() => t.el.remove(), 200);
-  if (usedColors[id] != null) colorPool.push(usedColors[id]);
+  t.el.style.transform='translate(-50%,-50%) scale(0)';
+  setTimeout(()=>t.el.remove(),200);
+  if(usedColors[id]!=null) colorPool.push(usedColors[id]);
   delete usedColors[id]; delete touches[id];
 }
-
 function updateCount() {
-  const n = Object.keys(touches).length;
-  document.getElementById('count-num').textContent = n;
-  document.getElementById('finger-count').classList.toggle('show', n > 0);
-  document.getElementById('arena').classList.toggle('active', n > 0);
+  const n=Object.keys(touches).length;
+  document.getElementById('count-num').textContent=n;
+  document.getElementById('finger-count').classList.toggle('show',n>0);
+  document.getElementById('arena').classList.toggle('active',n>0);
   updateInstruction();
 }
-
 function startHoldTimer() {
-  if (holdTimer) clearTimeout(holdTimer);
-  holdStart = Date.now(); animateHoldBar();
-  holdTimer = setTimeout(() => { if (Object.keys(touches).length >= 1 && !done) reveal(); }, HOLD_TIME);
+  if(holdTimer) clearTimeout(holdTimer);
+  holdStart=Date.now(); animateHoldBar();
+  holdTimer=setTimeout(()=>{if(Object.keys(touches).length>=1&&!done) reveal();},HOLD_TIME);
 }
 function cancelHoldTimer() {
-  if (holdTimer) clearTimeout(holdTimer);
-  holdTimer = null; holdStart = null;
-  document.getElementById('hold-bar').style.width = '0%';
+  if(holdTimer) clearTimeout(holdTimer);
+  holdTimer=null; holdStart=null;
+  document.getElementById('hold-bar').style.width='0%';
 }
 function animateHoldBar() {
-  if (!holdStart || done) return;
-  const pct = Math.min(100, ((Date.now() - holdStart) / HOLD_TIME) * 100);
-  document.getElementById('hold-bar').style.width = pct + '%';
-  if (pct < 100) requestAnimationFrame(animateHoldBar);
+  if(!holdStart||done) return;
+  const pct=Math.min(100,((Date.now()-holdStart)/HOLD_TIME)*100);
+  document.getElementById('hold-bar').style.width=pct+'%';
+  if(pct<100) requestAnimationFrame(animateHoldBar);
 }
-
 function shuffle(a) {
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
   return a;
 }
-
 function reveal() {
-  done = true; cancelHoldTimer();
-  document.getElementById('hold-bar').style.width = '100%';
-  setTimeout(() => document.getElementById('hold-bar').style.width = '0%', 400);
-  const ids = Object.keys(touches);
-  if (!ids.length) { reset(); return; }
-  if (mode === 'first') revealFirst(ids);
-  else if (mode === 'order') revealOrder(ids);
+  done=true; cancelHoldTimer();
+  document.getElementById('hold-bar').style.width='100%';
+  setTimeout(()=>document.getElementById('hold-bar').style.width='0%',400);
+  const ids=Object.keys(touches);
+  if(!ids.length){reset();return;}
+  if(mode==='first') revealFirst(ids);
+  else if(mode==='order') revealOrder(ids);
   else revealTeams(ids);
 }
-
 function revealFirst(ids) {
-  const winId = ids[Math.floor(Math.random()*ids.length)];
-  ids.forEach(id => { if (id !== winId) touches[id].el.classList.add('loser'); });
-  setTimeout(() => touches[winId].el.classList.add('winner'), 200);
-  const c = COLORS[touches[winId].colorIdx];
-  setTimeout(() => {
-    document.getElementById('result-label').textContent = 'GOES FIRST';
-    const t = document.getElementById('result-title');
-    t.textContent = c.name;
-    t.style.cssText = `background:linear-gradient(135deg,${c.hex},${c.hex}99);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text`;
-    document.getElementById('result-order').innerHTML = '';
-    document.getElementById('teams-result').innerHTML = '';
+  const winId=ids[Math.floor(Math.random()*ids.length)];
+  ids.forEach(id=>{if(id!==winId) touches[id].el.classList.add('loser');});
+  setTimeout(()=>touches[winId].el.classList.add('winner'),200);
+  const c=COLORS[touches[winId].colorIdx];
+  setTimeout(()=>{
+    document.getElementById('result-label').textContent='GOES FIRST';
+    const t=document.getElementById('result-title');
+    t.textContent=c.name;
+    t.style.cssText=`background:linear-gradient(135deg,${c.hex},${c.hex}99);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text`;
+    document.getElementById('result-order').innerHTML='';
+    document.getElementById('teams-result').innerHTML='';
     document.getElementById('result-overlay').classList.add('show');
-    // Dim all dots — still visible for reference, but card is clearly readable
-    Object.values(touches).forEach(t => t.el.classList.add('dim'));
-  }, 600);
+    Object.values(touches).forEach(t=>t.el.classList.add('dim'));
+  },600);
 }
-
 function revealOrder(ids) {
-  const order = shuffle([...ids]);
-  const labels = ['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th'];
-  order.forEach((id,i) => setTimeout(() => {
-    const d = touches[id]; if (!d) return;
+  const order=shuffle([...ids]);
+  const labels=['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th'];
+  order.forEach((id,i)=>setTimeout(()=>{
+    const d=touches[id]; if(!d) return;
     d.el.classList.add('labeled');
-    if (i===0) d.el.classList.add('winner');
-    d.el.querySelector('.rank-label').textContent = labels[i]||`#${i+1}`;
-  }, i*200));
-  setTimeout(() => {
-    document.getElementById('result-label').textContent = 'PLAY ORDER';
-    const t = document.getElementById('result-title'); t.textContent=''; t.style.cssText='';
-    document.getElementById('teams-result').innerHTML = '';
-    const od = document.getElementById('result-order'); od.innerHTML='';
-    order.forEach((id,i) => {
-      const c = COLORS[touches[id]?.colorIdx??0];
-      const chip = document.createElement('div');
+    if(i===0) d.el.classList.add('winner');
+    d.el.querySelector('.rank-label').textContent=labels[i]||`#${i+1}`;
+  },i*200));
+  setTimeout(()=>{
+    document.getElementById('result-label').textContent='PLAY ORDER';
+    const t=document.getElementById('result-title'); t.textContent=''; t.style.cssText='';
+    document.getElementById('teams-result').innerHTML='';
+    const od=document.getElementById('result-order'); od.innerHTML='';
+    order.forEach((id,i)=>{
+      const c=COLORS[touches[id]?.colorIdx??0];
+      const chip=document.createElement('div');
       chip.className='order-chip'; chip.style.cssText=`color:${c.hex};animation-delay:${0.1+i*0.1}s`; chip.textContent=i+1;
       od.appendChild(chip);
-      if (i < order.length-1) {
-        const a = document.createElement('div');
+      if(i<order.length-1){
+        const a=document.createElement('div');
         a.className='order-arrow'; a.style.animationDelay=(0.15+i*0.1)+'s'; a.innerHTML='→'; od.appendChild(a);
       }
     });
     document.getElementById('result-overlay').classList.add('show');
-    Object.values(touches).forEach(t => t.el.classList.add('dim'));
-  }, order.length*200+300);
+    Object.values(touches).forEach(t=>t.el.classList.add('dim'));
+  },order.length*200+300);
 }
-
 function revealTeams(ids) {
-  const shuffled = shuffle([...ids]);
-  const k = Math.min(numTeams, shuffled.length);
-  const teams = Array.from({length:k}, ()=>[]);
-  shuffled.forEach((id,i) => teams[i%k].push(id));
-
-  shuffled.forEach((id,i) => {
-    const tc = TEAM_COLORS[i%k];
-    setTimeout(() => {
-      const d = touches[id]; if (!d) return;
-      d.el.style.color = tc.bg;
-      d.el.classList.add('teamed','labeled');
-      d.el.querySelector('.rank-label').textContent = `T${(i%k)+1}`;
-    }, i*120);
+  const shuffled=shuffle([...ids]);
+  const k=Math.min(numTeams,shuffled.length);
+  const teams=Array.from({length:k},()=>[]);
+  shuffled.forEach((id,i)=>teams[i%k].push(id));
+  shuffled.forEach((id,i)=>{
+    const tc=TEAM_COLORS[i%k];
+    setTimeout(()=>{
+      const d=touches[id]; if(!d) return;
+      d.el.style.color=tc.bg; d.el.classList.add('teamed','labeled');
+      d.el.querySelector('.rank-label').textContent=`T${(i%k)+1}`;
+    },i*120);
   });
-
-  setTimeout(() => {
-    document.getElementById('result-label').textContent = `${k} TEAMS`;
-    const t = document.getElementById('result-title'); t.textContent=''; t.style.cssText='';
-    document.getElementById('result-order').innerHTML = '';
-    const tr = document.getElementById('teams-result'); tr.innerHTML='';
-
-    teams.forEach((memberIds, ti) => {
-      const tc = TEAM_COLORS[ti];
-      const row = document.createElement('div');
+  setTimeout(()=>{
+    document.getElementById('result-label').textContent=`${k} TEAMS`;
+    const t=document.getElementById('result-title'); t.textContent=''; t.style.cssText='';
+    document.getElementById('result-order').innerHTML='';
+    const tr=document.getElementById('teams-result'); tr.innerHTML='';
+    teams.forEach((memberIds,ti)=>{
+      const tc=TEAM_COLORS[ti];
+      const row=document.createElement('div');
       row.className='team-row'; row.style.cssText=`animation-delay:${0.05+ti*0.1}s;border-color:${tc.bg}40`;
-
-      const badge = document.createElement('div');
+      const badge=document.createElement('div');
       badge.className='team-badge';
       badge.style.cssText=`background:${tc.bg}20;color:${tc.bg};border:1px solid ${tc.bg}60`;
       badge.textContent=tc.label;
-
-      const dotsDiv = document.createElement('div');
-      dotsDiv.className='team-dots';
-      memberIds.forEach((id,di) => {
-        const orig = COLORS[touches[id]?.colorIdx??0];
-        const pipWrap = document.createElement('div');
+      const dotsDiv=document.createElement('div'); dotsDiv.className='team-dots';
+      memberIds.forEach((id,di)=>{
+        const orig=COLORS[touches[id]?.colorIdx??0];
+        const pipWrap=document.createElement('div');
         pipWrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:3px';
-        const pip = document.createElement('div');
-        pip.className='dot-pip';
+        const pip=document.createElement('div'); pip.className='dot-pip';
         pip.style.cssText=`background:${orig.hex}30;border-color:${orig.hex};animation-delay:${0.1+ti*0.1+di*0.06}s`;
-        const pipLabel = document.createElement('div');
+        const pipLabel=document.createElement('div');
         pipLabel.style.cssText=`font-size:9px;letter-spacing:0.06em;color:${orig.hex};font-family:'DM Sans',sans-serif;opacity:0;animation:chip-in 0.25s ease ${0.15+ti*0.1+di*0.06}s forwards`;
-        pipLabel.textContent = orig.name;
-        pipWrap.appendChild(pip);
-        pipWrap.appendChild(pipLabel);
-        dotsDiv.appendChild(pipWrap);
+        pipLabel.textContent=orig.name;
+        pipWrap.appendChild(pip); pipWrap.appendChild(pipLabel); dotsDiv.appendChild(pipWrap);
       });
-
       row.appendChild(badge); row.appendChild(dotsDiv); tr.appendChild(row);
     });
     document.getElementById('result-overlay').classList.add('show');
-    Object.values(touches).forEach(t => t.el.classList.add('dim'));
-  }, shuffled.length*120+400);
+    Object.values(touches).forEach(t=>t.el.classList.add('dim'));
+  },shuffled.length*120+400);
 }
-
 function reset() {
-  done = false; cancelHoldTimer();
+  done=false; cancelHoldTimer();
   document.getElementById('result-overlay').classList.remove('show');
-  Object.keys(touches).forEach(id => touches[id].el.remove());
+  Object.keys(touches).forEach(id=>touches[id].el.remove());
   touches={}; usedColors={}; colorPool=[...Array(COLORS.length).keys()];
   document.getElementById('finger-count').classList.remove('show');
   document.getElementById('arena').classList.remove('active');
@@ -455,34 +643,261 @@ function reset() {
   document.getElementById('inst-small').textContent="Place all players' fingers on screen";
 }
 
-const arena = document.getElementById('arena');
-arena.addEventListener('touchstart', e => {
-  e.preventDefault(); if (done) return;
-  for (const t of e.changedTouches) if (!touches[t.identifier]) touches[t.identifier]=createDot(t.identifier,t.clientX,t.clientY);
+/* touch / mouse */
+const arena=document.getElementById('arena');
+arena.addEventListener('touchstart',e=>{
+  e.preventDefault(); if(done||appMode!=='whoo') return;
+  for(const t of e.changedTouches) if(!touches[t.identifier]) touches[t.identifier]=createDot(t.identifier,t.clientX,t.clientY);
   updateCount(); startHoldTimer();
-}, {passive:false});
-arena.addEventListener('touchmove', e => e.preventDefault(), {passive:false});
-arena.addEventListener('touchend', e => {
-  e.preventDefault(); if (done) return;
-  for (const t of e.changedTouches) removeDot(t.identifier);
+},{passive:false});
+arena.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+arena.addEventListener('touchend',e=>{
+  e.preventDefault(); if(done||appMode!=='whoo') return;
+  for(const t of e.changedTouches) removeDot(t.identifier);
   updateCount();
-  Object.keys(touches).length===0 ? cancelHoldTimer() : startHoldTimer();
-}, {passive:false});
-arena.addEventListener('touchcancel', e => {
+  Object.keys(touches).length===0?cancelHoldTimer():startHoldTimer();
+},{passive:false});
+arena.addEventListener('touchcancel',e=>{
   e.preventDefault();
-  for (const t of e.changedTouches) removeDot(t.identifier);
-  updateCount(); if (!Object.keys(touches).length) cancelHoldTimer();
-}, {passive:false});
-
+  for(const t of e.changedTouches) removeDot(t.identifier);
+  updateCount(); if(!Object.keys(touches).length) cancelHoldTimer();
+},{passive:false});
 let mouseDown=false;
-arena.addEventListener('mousedown', e => {
-  if (done) return; mouseDown=true;
-  touches['mouse']=createDot('mouse',e.clientX,e.clientY);
+arena.addEventListener('mousedown',e=>{
+  if(done||appMode!=='whoo') return;
+  mouseDown=true; touches['mouse']=createDot('mouse',e.clientX,e.clientY);
   updateCount(); startHoldTimer();
 });
-document.addEventListener('mouseup', () => {
-  if (!mouseDown||done) return; mouseDown=false; removeDot('mouse'); updateCount(); cancelHoldTimer();
+document.addEventListener('mouseup',()=>{
+  if(!mouseDown||done) return; mouseDown=false; removeDot('mouse'); updateCount(); cancelHoldTimer();
 });
+
+/* ══════════════════════════
+   WHUT — DICE ROLLER
+══════════════════════════ */
+const DIE_TYPES = [4, 6, 8, 10, 12, 20, 100];
+let diceSelection = {};   // { sides: count }
+let focusedDie = null;    // currently focused die type (controls count column)
+let diceRolling = false;
+let diceInterval = null;
+
+function buildDiceSelector() {
+  // Build die type buttons
+  const typeCol = document.getElementById('dice-type-col');
+  DIE_TYPES.forEach(sides => {
+    const btn = document.createElement('button');
+    btn.className = 'die-type-btn';
+    btn.id = `die-btn-${sides}`;
+    btn.textContent = `D${sides}`;
+    btn.onclick = () => tapDie(sides);
+    typeCol.appendChild(btn);
+  });
+
+  // Build count pips 1-10
+  const countCol = document.getElementById('dice-count-col');
+  for (let i = 1; i <= 10; i++) {
+    const pip = document.createElement('button');
+    pip.className = 'count-pip';
+    pip.id = `count-pip-${i}`;
+    pip.textContent = i;
+    pip.onclick = () => setFocusedCount(i);
+    countCol.appendChild(pip);
+  }
+  refreshCountCol();
+}
+
+/* Tap a die type: if inactive → activate + focus; if active but not focused → focus; if focused → deactivate */
+function tapDie(sides) {
+  if (diceSelection[sides] === undefined) {
+    // activate with count 1 and focus
+    diceSelection[sides] = 1;
+    focusedDie = sides;
+  } else if (focusedDie !== sides) {
+    // just refocus
+    focusedDie = sides;
+  } else {
+    // deactivate
+    delete diceSelection[sides];
+    // focus next active die if any
+    const remaining = Object.keys(diceSelection).map(Number);
+    focusedDie = remaining.length ? remaining[remaining.length - 1] : null;
+  }
+  refreshTypeCol();
+  refreshCountCol();
+  updateDiceHint();
+  resetDiceResults();
+}
+
+/* Set count for the currently focused die */
+function setFocusedCount(n) {
+  if (focusedDie === null) return;
+  diceSelection[focusedDie] = n;
+  refreshCountCol();
+  resetDiceResults();
+}
+
+/* Refresh die type button states */
+function refreshTypeCol() {
+  DIE_TYPES.forEach(sides => {
+    const btn = document.getElementById(`die-btn-${sides}`);
+    if (!btn) return;
+    const isActive  = diceSelection[sides] !== undefined;
+    const isFocused = focusedDie === sides;
+    btn.classList.toggle('active',  isActive && !isFocused);
+    btn.classList.toggle('focused', isFocused);
+  });
+}
+
+/* Refresh count column to reflect focused die's current count */
+function refreshCountCol() {
+  const currentCount = focusedDie !== null ? (diceSelection[focusedDie] || 1) : null;
+  for (let i = 1; i <= 10; i++) {
+    const pip = document.getElementById(`count-pip-${i}`);
+    if (!pip) continue;
+    pip.classList.toggle('active', currentCount === i);
+    pip.style.opacity = focusedDie !== null ? '1' : '0.25';
+    pip.style.pointerEvents = focusedDie !== null ? 'all' : 'none';
+  }
+}
+
+function updateDiceHint() {
+  const hasAny = Object.keys(diceSelection).length > 0;
+  document.getElementById('dice-hint').classList.toggle('hide', hasAny);
+  document.getElementById('roll-btn').style.opacity = hasAny ? '1' : '0.35';
+}
+
+function resetDiceResults() {
+  if (diceRolling) return;
+  document.getElementById('dice-results-area').innerHTML = '';
+  document.getElementById('dice-grand-wrap').classList.remove('show');
+  document.getElementById('dice-grand-total').textContent = '';
+  document.getElementById('dice-bar-wrap').classList.remove('show');
+  document.getElementById('dice-bar').style.width = '0%';
+  document.getElementById('roll-btn').textContent = 'ROLL';
+  document.getElementById('roll-btn').disabled = false;
+}
+
+function resetDice() {
+  diceRolling = false;
+  if (diceInterval) clearInterval(diceInterval);
+  diceSelection = {};
+  focusedDie = null;
+  refreshTypeCol();
+  refreshCountCol();
+  resetDiceResults();
+  updateDiceHint();
+}
+
+function rollDice() {
+  const activeSides = Object.keys(diceSelection).map(Number).sort((a,b)=>a-b);
+  if (!activeSides.length || diceRolling) return;
+  diceRolling = true;
+
+  const ROLL_DURATION = 1200;
+  const rollStart = Date.now();
+
+  document.getElementById('dice-results-area').innerHTML = '';
+  document.getElementById('dice-grand-wrap').classList.remove('show');
+  document.getElementById('roll-btn').disabled = true;
+  document.getElementById('roll-btn').textContent = 'ROLLING…';
+
+  // progress bar
+  const bar = document.getElementById('dice-bar');
+  const barWrap = document.getElementById('dice-bar-wrap');
+  barWrap.classList.add('show');
+  bar.style.width = '0%';
+  function animBar() {
+    const pct = Math.min(100, ((Date.now()-rollStart)/ROLL_DURATION)*100);
+    bar.style.width = pct+'%';
+    if (pct < 100) requestAnimationFrame(animBar);
+  }
+  requestAnimationFrame(animBar);
+
+  // build groups + flickering chips
+  const area = document.getElementById('dice-results-area');
+  const groups = [];
+
+  activeSides.forEach(sides => {
+    const count = diceSelection[sides];
+    const groupEl = document.createElement('div');
+    groupEl.className = 'dice-group';
+    const header = document.createElement('div'); header.className = 'dice-group-header';
+    const lbl = document.createElement('div'); lbl.className = 'dice-group-label';
+    lbl.textContent = `${count}× D${sides}`;
+    const sub = document.createElement('div'); sub.className = 'dice-group-subtotal';
+    header.appendChild(lbl); header.appendChild(sub);
+    const chipsRow = document.createElement('div'); chipsRow.className = 'dice-chips-row';
+    groupEl.appendChild(header); groupEl.appendChild(chipsRow);
+    area.appendChild(groupEl);
+
+    const chipEls = [];
+    for (let i = 0; i < count; i++) {
+      const chip = document.createElement('div');
+      chip.className = 'dice-chip rolling-chip';
+      chip.textContent = Math.floor(Math.random()*sides)+1;
+      chipsRow.appendChild(chip);
+      chipEls.push(chip);
+      setTimeout(() => chip.classList.add('show'), i * 30);
+    }
+    groups.push({sides, count, subtotalEl:sub, chipEls});
+  });
+
+  // flicker all chips during roll
+  diceInterval = setInterval(() => {
+    groups.forEach(g => g.chipEls.forEach(c => { c.textContent = Math.floor(Math.random()*g.sides)+1; }));
+  }, 80);
+
+  // settle
+  setTimeout(() => {
+    clearInterval(diceInterval);
+    let totalChips = groups.reduce((s,g)=>s+g.count, 0);
+    let chipsDone = 0;
+
+    groups.forEach((g, gi) => {
+      const results = Array.from({length:g.count}, ()=>Math.floor(Math.random()*g.sides)+1)
+                           .sort((a,b)=>b-a);
+      let groupSum = 0;
+
+      results.forEach((val, i) => {
+        setTimeout(() => {
+          g.chipEls[i].classList.remove('rolling-chip');
+          g.chipEls[i].textContent = val;
+          groupSum += val;
+          chipsDone++;
+
+          if (i === results.length - 1) {
+            setTimeout(() => {
+              g.subtotalEl.textContent = groupSum;
+              g.subtotalEl.classList.add('show');
+            }, 100);
+          }
+
+          if (chipsDone === totalChips) {
+            setTimeout(() => {
+              let gt = 0;
+              groups.forEach(grp => grp.chipEls.forEach(c => gt += parseInt(c.textContent)||0));
+              document.getElementById('dice-grand-total').textContent = gt;
+              if (activeSides.length > 1 || groups[0].count > 1) {
+                document.getElementById('dice-grand-wrap').classList.add('show');
+              }
+              bar.style.width = '100%';
+              setTimeout(() => {
+                diceRolling = false;
+                document.getElementById('roll-btn').disabled = false;
+                document.getElementById('roll-btn').textContent = 'ROLL AGAIN';
+              }, 300);
+            }, 200);
+          }
+        }, gi * g.count * 70 + i * 70);
+      });
+    });
+  }, ROLL_DURATION);
+}
+
+// init
+buildDiceSelector();
+updateDiceHint();
+document.getElementById('roll-btn').style.opacity = '0.35';
 </script>
 </body>
 </html>
