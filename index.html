@@ -11,6 +11,25 @@
   --bg:#0a0a0f; --surface:#13131a;
   --gold:#f5c842; --gold2:#e8a820;
   --text:#f0eee8; --muted:#666580;
+
+  /* Responsive spacing — scales with viewport height */
+  --top-pad: clamp(14px, 2.5dvh, 28px);
+  --edge-pad: clamp(14px, 2.5vw, 28px);
+  /* top of selectors — below the compact centred header */
+  --selector-top: calc(var(--top-pad) + clamp(42px, 7dvh, 58px));
+  /* bottom of selector row = selector-top + button height + gap */
+  --selector-bottom: calc(var(--selector-top) + var(--die-btn-h) + clamp(8px, 1.5dvh, 14px));
+
+  /* Selector button sizing */
+  --die-btn-h: clamp(22px, 3.2dvh, 28px);
+  --die-btn-gap: clamp(2px, 0.4dvh, 4px);
+  --die-btn-fs: clamp(9px, 1.4dvh, 12px);
+  --count-pip-sz: clamp(20px, 3dvh, 26px);
+  --count-pip-fs: clamp(9px, 1.3dvh, 12px);
+
+  /* Bottom UI positions */
+  --inst-bottom: clamp(32px, 5dvh, 56px);
+  --count-bottom: clamp(90px, 14dvh, 140px);
 }
 body {
   background:var(--bg); color:var(--text);
@@ -33,13 +52,16 @@ body::before {
 
 /* ── APP SWITCHER ── */
 #app-switcher {
-  position:fixed; top:20px; left:20px;
-  display:flex; align-items:baseline; gap:6px;
+  position:fixed; top:var(--top-pad); left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:2px;
   z-index:20; pointer-events:all;
+}
+#app-switcher-row {
+  display:flex; align-items:baseline; gap:6px;
 }
 .app-word {
   font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(28px,6vw,42px);
+  font-size:calc(var(--die-btn-h) * 1.25);
   letter-spacing:0.05em; line-height:1;
   cursor:pointer; transition:color 0.2s,text-shadow 0.2s;
 }
@@ -47,34 +69,37 @@ body::before {
 .app-word.inactive{ color:var(--muted); text-shadow:none; }
 .app-divider {
   font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(18px,4vw,28px); color:#2a2a38; line-height:1; pointer-events:none;
+  font-size:calc(var(--die-btn-h) * 0.9); color:#2a2a38; line-height:1; pointer-events:none;
 }
 #subtitle {
-  position:fixed; top:64px; left:20px;
-  font-size:10px; color:var(--muted);
+  font-size:clamp(8px,1vw,10px); color:var(--muted);
   letter-spacing:0.12em; text-transform:uppercase;
-  z-index:20; pointer-events:none; transition:opacity 0.2s;
+  pointer-events:none; transition:opacity 0.2s; line-height:1;
 }
 
 /* ── WHOO MODE TOGGLE ── */
 #mode-toggle {
-  position:fixed; top:20px; right:20px;
-  display:flex; background:var(--surface);
-  border:1px solid rgba(255,255,255,0.07);
-  border-radius:100px; padding:3px;
-  pointer-events:all; gap:2px; z-index:20; transition:opacity 0.2s;
+  position:fixed; top:var(--selector-top); left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:row;
+  pointer-events:all; gap:var(--die-btn-gap); z-index:20; transition:opacity 0.2s;
+  align-items:center;
 }
 .mode-btn {
-  font-family:'DM Sans',sans-serif; font-size:10px; font-weight:500;
-  letter-spacing:0.06em; text-transform:uppercase; padding:6px 12px;
-  border-radius:100px; border:none; background:transparent; color:var(--muted);
+  font-family:'DM Sans',sans-serif; font-size:var(--die-btn-fs); font-weight:500;
+  letter-spacing:0.06em; text-transform:uppercase;
+  padding:0 14px; width:auto; min-width:42px; height:var(--die-btn-h);
+  border-radius:100px; border:1px solid rgba(255,255,255,0.07);
+  background:var(--surface); color:var(--muted);
   cursor:pointer; transition:all 0.2s; white-space:nowrap;
+  display:flex; align-items:center; justify-content:center;
 }
-.mode-btn.active { background:var(--gold); color:#0a0a0f; font-weight:700; }
+.mode-btn.active { background:var(--gold); color:#0a0a0f; font-weight:700; border-color:var(--gold); box-shadow:0 0 10px rgba(245,200,66,0.25); }
+
+#mode-toggle.hidden { opacity:0; pointer-events:none; }
 
 /* ── TEAMS BAR ── */
 #teams-bar {
-  position:fixed; top:72px; left:50%; transform:translateX(-50%);
+  position:fixed; top:var(--selector-bottom); left:50%; transform:translateX(-50%);
   display:flex; align-items:center; gap:8px;
   z-index:10; pointer-events:all; opacity:0; transition:opacity 0.25s;
 }
@@ -90,21 +115,23 @@ body::before {
 
 /* ── FINGER COUNT ── */
 #finger-count {
-  position:fixed; bottom:130px; left:50%; transform:translateX(-50%);
+  position:fixed; bottom:var(--count-bottom); left:50%; transform:translateX(-50%);
   display:flex; align-items:center; gap:8px;
   opacity:0; transition:opacity 0.3s; pointer-events:none; z-index:10;
 }
 #finger-count.show { opacity:1; }
-.count-num { font-family:'Bebas Neue',sans-serif; font-size:52px; color:var(--gold); line-height:1; text-shadow:0 0 30px rgba(245,200,66,0.4); }
-.count-label { font-size:11px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; line-height:1.4; }
+.count-num { font-family:'Bebas Neue',sans-serif; font-size:clamp(40px,10vmin,64px); color:var(--gold); line-height:1; text-shadow:0 0 30px rgba(245,200,66,0.4); }
+.count-label { font-size:clamp(9px,1.5vmin,12px); color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; line-height:1.4; }
 
 /* ── WHOO INSTRUCTION ── */
 #instruction {
-  position:fixed; bottom:48px; left:50%; transform:translateX(-50%);
-  text-align:center; pointer-events:none; z-index:10; white-space:nowrap; transition:opacity 0.3s;
+  position:fixed; bottom:var(--inst-bottom); left:50%; transform:translateX(-50%);
+  text-align:center; pointer-events:none; z-index:10; white-space:nowrap;
+  opacity:1; transition:opacity 0.3s;
 }
-#inst-big { font-family:'Bebas Neue',sans-serif; font-size:clamp(16px,4vw,24px); letter-spacing:0.08em; color:var(--muted); line-height:1; }
-#inst-small { font-size:10px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; margin-top:6px; opacity:0.6; }
+#instruction.hidden { opacity:0; pointer-events:none; }
+#inst-big { font-family:'Bebas Neue',sans-serif; font-size:clamp(14px,3.5vw,26px); letter-spacing:0.08em; color:var(--muted); line-height:1; }
+#inst-small { font-size:clamp(9px,1.5vw,11px); color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; margin-top:6px; opacity:0.6; }
 
 /* ── HOLD BAR ── */
 #hold-bar {
@@ -114,21 +141,21 @@ body::before {
   box-shadow:0 0 12px rgba(245,200,66,0.5);
 }
 
-/* ── TOUCH DOTS ── */
+/* ── TOUCH DOTS — scale with vmin so they feel right on tablets too ── */
 .touch-dot {
-  position:fixed; width:80px; height:80px; border-radius:50%;
+  position:fixed; width:clamp(60px,10vmin,96px); height:clamp(60px,10vmin,96px); border-radius:50%;
   transform:translate(-50%,-50%) scale(0);
   pointer-events:none; transition:transform 0.15s cubic-bezier(0.34,1.56,0.64,1);
   display:flex; align-items:center; justify-content:center; z-index:5;
 }
 .touch-dot.alive { transform:translate(-50%,-50%) scale(1); }
 .touch-dot .ring { position:absolute; inset:0; border-radius:50%; border:2.5px solid currentColor; opacity:0.5; transition:border-color 0.4s,border-width 0.3s,opacity 0.3s; }
-.touch-dot .inner { width:44px; height:44px; border-radius:50%; background:currentColor; opacity:0.85; }
+.touch-dot .inner { width:clamp(32px,5.5vmin,52px); height:clamp(32px,5.5vmin,52px); border-radius:50%; background:currentColor; opacity:0.85; }
 .touch-dot .pulse { position:absolute; inset:-12px; border-radius:50%; border:2px solid currentColor; opacity:0; animation:pulse-ring 1.8s ease-out infinite; }
 @keyframes pulse-ring { 0%{transform:scale(0.8);opacity:0.4} 100%{transform:scale(1.4);opacity:0} }
 .touch-dot .rank-label {
   position:absolute; top:-26px; left:50%; transform:translateX(-50%);
-  font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:0.1em;
+  font-family:'Bebas Neue',sans-serif; font-size:clamp(10px,1.8vmin,13px); letter-spacing:0.1em;
   color:currentColor; white-space:nowrap; opacity:0; transition:opacity 0.3s;
 }
 .touch-dot.labeled .rank-label { opacity:1; }
@@ -138,22 +165,28 @@ body::before {
 .touch-dot.dim { opacity:0.4; transition:opacity 0.4s; }
 @keyframes winner-pop { 0%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-50%) scale(1.3)} 100%{transform:translate(-50%,-50%) scale(1.1)} }
 
-/* ── WHOO RESULT CARD ── */
-#result-overlay {
+/* ── WHOO RESULT WRAP — card + button grouped, centered on screen ── */
+#result-wrap {
   position:fixed; top:50%; left:50%;
   transform:translate(-50%,-50%) scale(0.92);
-  width:min(420px,80vw); max-height:70dvh; overflow-y:auto;
+  display:flex; flex-direction:column; align-items:center; gap:12px;
+  width:min(520px,82vw);
+  opacity:0; pointer-events:none; z-index:15;
+  transition:opacity 0.4s, transform 0.4s cubic-bezier(0.34,1.3,0.64,1);
+}
+#result-wrap.show { opacity:1; pointer-events:all; transform:translate(-50%,-50%) scale(1); }
+
+/* ── WHOO RESULT CARD ── */
+#result-overlay {
+  width:100%; max-height:60dvh; overflow-y:auto;
   display:flex; flex-direction:column; align-items:center;
   background:rgba(14,14,22,0.40);
   backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
   border:1px solid rgba(255,255,255,0.13); border-radius:20px;
-  padding:18px 18px 16px;
+  padding:clamp(14px,2.5dvh,24px) clamp(14px,3vw,24px);
   box-shadow:0 8px 60px rgba(0,0,0,0.8),0 0 0 1px rgba(255,255,255,0.04);
-  opacity:0; pointer-events:none; z-index:15;
-  transition:opacity 0.4s,transform 0.4s cubic-bezier(0.34,1.3,0.64,1);
   text-align:center;
 }
-#result-overlay.show { opacity:1; pointer-events:all; transform:translate(-50%,-50%) scale(1); }
 #result-label { font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
 #result-title {
   font-family:'Bebas Neue',sans-serif; font-size:clamp(44px,14vw,84px);
@@ -178,68 +211,69 @@ body::before {
 .team-dots { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
 .dot-pip { width:22px; height:22px; border-radius:50%; border:2px solid; opacity:0; animation:chip-in 0.25s ease forwards; }
 @keyframes chip-in { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-#reset-btn {
-  margin-top:14px; padding:10px 28px; background:#1a1a26;
-  border:1.5px solid rgba(255,255,255,0.18); border-radius:100px;
-  color:var(--text); font-family:'DM Sans',sans-serif; font-size:11px;
-  letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; transition:all 0.2s; flex-shrink:0;
+/* ── ACTION BUTTONS (shared: Choose Again + Roll / Roll Again) ── */
+.action-btn {
+  display:block; margin:0 auto;
+  padding:clamp(12px,2dvh,18px) clamp(32px,7vw,52px);
+  background:rgba(245,200,66,0.1); border:1.5px solid var(--gold);
+  border-radius:100px; color:var(--gold);
+  font-family:'Bebas Neue',sans-serif; font-size:clamp(16px,3.5vw,22px);
+  letter-spacing:0.12em; cursor:pointer; transition:all 0.2s;
+  box-shadow:0 0 24px rgba(245,200,66,0.1); flex-shrink:0;
 }
-#reset-btn:hover,#reset-btn:active { border-color:var(--gold); color:var(--gold); background:#1f1f2e; }
+.action-btn:hover,.action-btn:active { background:rgba(245,200,66,0.2); box-shadow:0 0 40px rgba(245,200,66,0.25); transform:scale(1.03); }
+.action-btn:disabled { opacity:0.4; cursor:default; transform:none; }
 
-/* ══════════════════════════════════
-   WHUT? DICE SELECTOR — top right, two columns
-══════════════════════════════════ */
-
-/* Outer wrapper — same position as #mode-toggle */
+/* ── WHUT DICE SELECTOR ── */
 #dice-selector {
-  position:fixed; top:20px; right:20px;
-  display:flex; flex-direction:row; align-items:flex-start; gap:5px;
-  z-index:20; opacity:0; pointer-events:none; transition:opacity 0.25s;
+  position:fixed; top:var(--selector-top); left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:var(--die-btn-gap);
+  z-index:25; opacity:0; pointer-events:none; transition:opacity 0.25s;
 }
 #dice-selector.show { opacity:1; pointer-events:all; }
 
-/* Number column (left) */
-#dice-count-col {
-  display:flex; flex-direction:column; gap:3px; align-items:center;
-}
-.count-pip {
-  width:26px; height:26px; border-radius:50%;
-  border:1.5px solid rgba(255,255,255,0.1); background:var(--surface);
-  color:var(--muted); font-family:'Bebas Neue',sans-serif; font-size:12px;
-  cursor:pointer; transition:all 0.18s;
-  display:flex; align-items:center; justify-content:center; flex-shrink:0;
-}
-.count-pip.active { border-color:var(--gold); color:var(--gold); background:rgba(245,200,66,0.12); }
-.count-col-label {
-  font-size:7px; letter-spacing:0.08em; text-transform:uppercase;
-  color:var(--muted); margin-bottom:1px; text-align:center;
+/* Die type row (top) */
+#dice-type-col {
+  display:flex; flex-direction:row; gap:var(--die-btn-gap); align-items:center;
 }
 
-/* Die type column (right) */
-#dice-type-col {
-  display:flex; flex-direction:column; gap:3px; align-items:center;
+/* Number row (bottom) */
+#dice-count-col {
+  display:flex; flex-direction:row; gap:var(--die-btn-gap); align-items:center;
 }
-.die-type-btn {
-  width:44px; height:26px; border-radius:7px;
-  border:1.5px solid rgba(255,255,255,0.1); background:var(--surface);
-  color:var(--muted); font-family:'Bebas Neue',sans-serif; font-size:11px;
-  letter-spacing:0.04em; cursor:pointer; transition:all 0.2s;
+.count-pip {
+  width:var(--count-pip-sz); height:var(--count-pip-sz); border-radius:50%;
+  border:1px solid rgba(255,255,255,0.07); background:var(--surface);
+  color:var(--muted); font-family:'DM Sans',sans-serif; font-weight:500;
+  font-size:var(--count-pip-fs);
+  cursor:pointer; transition:all 0.2s;
   display:flex; align-items:center; justify-content:center; flex-shrink:0;
 }
-/* active = toggled on but not focused */
-.die-type-btn.active {
-  border-color:rgba(245,200,66,0.5); color:rgba(245,200,66,0.7);
-  background:rgba(245,200,66,0.06);
-}
-/* focused = currently controlling the count column */
-.die-type-btn.focused {
-  border-color:var(--gold); color:var(--gold);
-  background:rgba(245,200,66,0.15);
+.count-pip.active {
+  border-color:var(--gold); color:#0a0a0f;
+  background:var(--gold); font-weight:700;
   box-shadow:0 0 10px rgba(245,200,66,0.25);
 }
-.die-col-label {
-  font-size:7px; letter-spacing:0.08em; text-transform:uppercase;
-  color:var(--muted); margin-bottom:1px; text-align:center;
+/* Die type row buttons */
+.die-type-btn {
+  width:44px; height:var(--die-btn-h); border-radius:100px;
+  border:1px solid rgba(255,255,255,0.07); background:var(--surface);
+  color:var(--muted); font-family:'DM Sans',sans-serif; font-weight:500;
+  font-size:var(--die-btn-fs); letter-spacing:0.06em; text-transform:uppercase;
+  cursor:pointer; transition:all 0.2s;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+/* active = on but not focused — subtle gold tint, no fill */
+.die-type-btn.active {
+  border-color:rgba(245,200,66,0.4);
+  color:rgba(245,200,66,0.65);
+  background:var(--surface);
+}
+/* focused = gold fill + dark text, matches .mode-btn.active exactly */
+.die-type-btn.focused {
+  background:var(--gold); color:#0a0a0f;
+  border-color:var(--gold); font-weight:700;
+  box-shadow:0 0 10px rgba(245,200,66,0.25);
 }
 
 /* ── DICE SCREEN (center area) ── */
@@ -247,31 +281,40 @@ body::before {
   position:fixed; inset:0;
   display:flex; flex-direction:column;
   align-items:center; justify-content:center;
-  z-index:8; opacity:0; pointer-events:none; transition:opacity 0.3s;
+  z-index:18; opacity:0; pointer-events:none; transition:opacity 0.3s;
 }
 #dice-screen.show { opacity:1; pointer-events:all; }
 
-/* No dice selected hint */
+/* No dice selected hint — matches #instruction placement */
 #dice-hint {
-  font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(16px,4vw,22px);
-  letter-spacing:0.1em; color:var(--muted);
-  text-align:center; opacity:1; transition:opacity 0.3s;
+  position:fixed; bottom:var(--inst-bottom); left:50%; transform:translateX(-50%);
+  text-align:center; pointer-events:none; z-index:19; white-space:nowrap;
+  opacity:0; transition:opacity 0.3s;
 }
-#dice-hint.hide { opacity:0; pointer-events:none; }
+#dice-hint.visible { opacity:1; }
+#dice-hint-big {
+  font-family:'Bebas Neue',sans-serif; font-size:clamp(14px,3.5vw,26px);
+  letter-spacing:0.08em; color:var(--muted); line-height:1;
+}
+#dice-hint-small {
+  font-size:clamp(9px,1.5vw,11px); color:var(--muted);
+  letter-spacing:0.1em; text-transform:uppercase; margin-top:6px; opacity:0.6;
+}
 
 /* Results area */
 #dice-results-area {
   display:flex; flex-direction:column; align-items:center; gap:10px;
-  width:min(340px,75vw); margin-bottom:32px;
+  width:min(480px, 82vw);
+  margin-bottom:clamp(20px,4dvh,40px);
 }
 
-/* Per-type group */
+/* Per-type group — match WHOO card style */
 .dice-group {
   width:100%;
-  background:rgba(14,14,22,0.50);
-  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-  border:1px solid rgba(255,255,255,0.1);
+  background:rgba(14,14,22,0.40);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.13);
+  box-shadow:0 8px 60px rgba(0,0,0,0.8),0 0 0 1px rgba(255,255,255,0.04);
   border-radius:14px; padding:10px 12px;
   display:flex; flex-direction:column; gap:6px;
   opacity:0; transform:translateY(8px);
@@ -325,7 +368,7 @@ body::before {
 #dice-bar-wrap {
   width:min(200px,55vw); height:3px;
   background:rgba(255,255,255,0.07); border-radius:100px; overflow:hidden;
-  margin-bottom:36px; opacity:0; transition:opacity 0.2s;
+  margin-bottom:clamp(24px,4dvh,44px); opacity:0; transition:opacity 0.2s;
 }
 #dice-bar-wrap.show { opacity:1; }
 #dice-bar {
@@ -334,17 +377,7 @@ body::before {
   border-radius:100px; box-shadow:0 0 8px rgba(245,200,66,0.5);
 }
 
-/* Roll button */
-#roll-btn {
-  padding:16px 48px;
-  background:rgba(245,200,66,0.1); border:1.5px solid var(--gold);
-  border-radius:100px; color:var(--gold);
-  font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:0.12em;
-  cursor:pointer; transition:all 0.2s;
-  box-shadow:0 0 24px rgba(245,200,66,0.1);
-}
-#roll-btn:hover,#roll-btn:active { background:rgba(245,200,66,0.2); box-shadow:0 0 40px rgba(245,200,66,0.25); transform:scale(1.03); }
-#roll-btn:disabled { opacity:0.4; cursor:default; transform:none; }
+/* Roll button — base style from .action-btn */
 </style>
 </head>
 <body>
@@ -354,11 +387,13 @@ body::before {
 
 <!-- APP SWITCHER -->
 <div id="app-switcher">
-  <span class="app-word active"  id="word-whoo" onclick="switchApp('whoo')">WHOO?</span>
-  <span class="app-divider">/</span>
-  <span class="app-word inactive" id="word-whut" onclick="switchApp('whut')">WHUT?</span>
+  <div id="app-switcher-row">
+    <span class="app-word active"  id="word-whoo" onclick="switchApp('whoo')">WHOO?</span>
+    <span class="app-divider">/</span>
+    <span class="app-word inactive" id="word-whut" onclick="switchApp('whut')">WHUT?</span>
+  </div>
+  <div id="subtitle">Player Picker</div>
 </div>
-<div id="subtitle">Game Picker</div>
 
 <!-- WHOO MODE TOGGLE -->
 <div id="mode-toggle">
@@ -382,43 +417,44 @@ body::before {
   <div class="count-label">fingers<br>touching</div>
 </div>
 <div id="instruction">
-  <div id="inst-big" style="font-family:'Bebas Neue',sans-serif;font-size:clamp(16px,4vw,24px);letter-spacing:0.08em;color:var(--muted);line-height:1">Touch &amp; Hold</div>
-  <div id="inst-small" style="font-size:10px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-top:6px;opacity:0.6">Place all players' fingers on screen</div>
+  <div id="inst-big">Touch &amp; Hold</div>
+  <div id="inst-small">Place all players' fingers on screen</div>
 </div>
 
-<!-- WHOO RESULT CARD -->
-<div id="result-overlay">
-  <div id="result-label">GOES FIRST</div>
-  <div id="result-title"></div>
-  <div id="result-order"></div>
-  <div id="teams-result"></div>
-  <button id="reset-btn" onclick="reset()">Choose Again</button>
+<!-- WHOO RESULT -->
+<div id="result-wrap">
+  <div id="result-overlay">
+    <div id="result-label">GOES FIRST</div>
+    <div id="result-title"></div>
+    <div id="result-order"></div>
+    <div id="teams-result"></div>
+  </div>
+  <button id="reset-btn" class="action-btn" onclick="reset()">Choose Again</button>
 </div>
 
 <!-- WHUT DICE SCREEN -->
 <div id="dice-screen">
-  <div id="dice-hint">← Select a die type to begin</div>
   <div id="dice-results-area"></div>
   <div id="dice-grand-wrap">
     <div id="dice-grand-label">GRAND TOTAL</div>
     <div id="dice-grand-total"></div>
   </div>
   <div id="dice-bar-wrap"><div id="dice-bar"></div></div>
-  <button id="roll-btn" onclick="rollDice()">ROLL</button>
+  <button id="roll-btn" class="action-btn" onclick="rollDice()">ROLL</button>
 </div>
 
-<!-- WHUT DICE SELECTOR — two columns, top right -->
+<!-- WHUT HINT — fixed bottom, matches WHOO instruction layout -->
+<div id="dice-hint">
+  <div id="dice-hint-big">Select a die type to begin</div>
+  <div id="dice-hint-small">Toggle die type and number of die</div>
+</div>
+
+<!-- WHUT DICE SELECTOR — two rows, top left -->
 <div id="dice-selector">
-  <!-- left: number count column -->
-  <div id="dice-count-col">
-    <div class="count-col-label">Qty</div>
-    <!-- pips 1-10 built by JS -->
-  </div>
-  <!-- right: die type column -->
-  <div id="dice-type-col">
-    <div class="die-col-label">Die</div>
-    <!-- buttons built by JS -->
-  </div>
+  <!-- row 1: die type buttons built by JS -->
+  <div id="dice-type-col"></div>
+  <!-- row 2: number count pips built by JS -->
+  <div id="dice-count-col"></div>
 </div>
 
 <script>
@@ -448,15 +484,16 @@ function switchApp(app) {
   document.getElementById('word-whoo').className = 'app-word '+(app==='whoo'?'active':'inactive');
   document.getElementById('word-whut').className = 'app-word '+(app==='whut'?'active':'inactive');
   const isWhoo = app === 'whoo';
-  document.getElementById('subtitle').textContent = isWhoo ? 'Game Picker' : 'Dice Roller';
-  document.getElementById('mode-toggle').style.cssText = isWhoo ? '' : 'opacity:0;pointer-events:none';
-  document.getElementById('instruction').style.opacity = isWhoo ? '1' : '0';
+  document.getElementById('subtitle').textContent = isWhoo ? 'Player Picker' : 'Dice Decider';
+  document.getElementById('mode-toggle').classList.toggle('hidden', !isWhoo);
+  document.getElementById('instruction').classList.toggle('hidden', !isWhoo);
   document.getElementById('finger-count').classList.remove('show');
   document.getElementById('teams-bar').classList.remove('show');
   document.getElementById('dice-screen').classList.toggle('show', !isWhoo);
   document.getElementById('dice-selector').classList.toggle('show', !isWhoo);
   reset();
   resetDice();
+  updateDiceHint();
 }
 
 /* ══════════════════════════
@@ -556,7 +593,7 @@ function revealFirst(ids) {
     t.style.cssText=`background:linear-gradient(135deg,${c.hex},${c.hex}99);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text`;
     document.getElementById('result-order').innerHTML='';
     document.getElementById('teams-result').innerHTML='';
-    document.getElementById('result-overlay').classList.add('show');
+    document.getElementById('result-wrap').classList.add('show');
     Object.values(touches).forEach(t=>t.el.classList.add('dim'));
   },600);
 }
@@ -584,7 +621,7 @@ function revealOrder(ids) {
         a.className='order-arrow'; a.style.animationDelay=(0.15+i*0.1)+'s'; a.innerHTML='→'; od.appendChild(a);
       }
     });
-    document.getElementById('result-overlay').classList.add('show');
+    document.getElementById('result-wrap').classList.add('show');
     Object.values(touches).forEach(t=>t.el.classList.add('dim'));
   },order.length*200+300);
 }
@@ -628,25 +665,42 @@ function revealTeams(ids) {
       });
       row.appendChild(badge); row.appendChild(dotsDiv); tr.appendChild(row);
     });
-    document.getElementById('result-overlay').classList.add('show');
+    document.getElementById('result-wrap').classList.add('show');
     Object.values(touches).forEach(t=>t.el.classList.add('dim'));
   },shuffled.length*120+400);
 }
 function reset() {
   done=false; cancelHoldTimer();
-  document.getElementById('result-overlay').classList.remove('show');
+  document.getElementById('result-wrap').classList.remove('show');
   Object.keys(touches).forEach(id=>touches[id].el.remove());
   touches={}; usedColors={}; colorPool=[...Array(COLORS.length).keys()];
   document.getElementById('finger-count').classList.remove('show');
   document.getElementById('arena').classList.remove('active');
-  document.getElementById('inst-big').textContent='Touch & Hold';
-  document.getElementById('inst-small').textContent="Place all players' fingers on screen";
+  updateInstruction();
 }
 
 /* touch / mouse */
 const arena=document.getElementById('arena');
+/* ── GLOBAL DISMISS — any tap/click anywhere dismisses results ── */
+function tryDismiss() {
+  if(appMode==='whoo' && done) { reset(); return true; }
+  if(appMode==='whut' && !diceRolling) {
+    const hasResults = document.getElementById('dice-results-area').children.length > 0;
+    if(hasResults) { resetDice(); return true; }
+  }
+  return false;
+}
+document.addEventListener('touchstart', e => {
+  if(tryDismiss()) e.preventDefault();
+}, {passive:false});
+document.addEventListener('mousedown', e => {
+  tryDismiss();
+});
+
 arena.addEventListener('touchstart',e=>{
-  e.preventDefault(); if(done||appMode!=='whoo') return;
+  e.preventDefault();
+  if(appMode!=='whoo') return;
+  if(done) return; // already handled by global dismiss
   for(const t of e.changedTouches) if(!touches[t.identifier]) touches[t.identifier]=createDot(t.identifier,t.clientX,t.clientY);
   updateCount(); startHoldTimer();
 },{passive:false});
@@ -762,7 +816,9 @@ function refreshCountCol() {
 
 function updateDiceHint() {
   const hasAny = Object.keys(diceSelection).length > 0;
-  document.getElementById('dice-hint').classList.toggle('hide', hasAny);
+  const hint = document.getElementById('dice-hint');
+  // only show hint when on WHUT and no dice selected
+  hint.classList.toggle('visible', !hasAny && appMode === 'whut');
   document.getElementById('roll-btn').style.opacity = hasAny ? '1' : '0.35';
 }
 
@@ -885,6 +941,7 @@ function rollDice() {
                 diceRolling = false;
                 document.getElementById('roll-btn').disabled = false;
                 document.getElementById('roll-btn').textContent = 'ROLL AGAIN';
+                document.getElementById('roll-btn').style.opacity = '1';
               }, 300);
             }, 200);
           }
@@ -897,7 +954,6 @@ function rollDice() {
 // init
 buildDiceSelector();
 updateDiceHint();
-document.getElementById('roll-btn').style.opacity = '0.35';
 </script>
 </body>
 </html>
